@@ -1,0 +1,20 @@
+timestamp,mode,distance_km,gallons,co2_kg,description,email_id
+2026-03-28T19:00:49.599351,flight,3983,,1015.66,DL 1847 JFK→LAX,seed
+2026-03-28T19:00:49.599351,gas,,12.4,113.64,Shell gas station,seed
+2026-03-28T19:00:49.599351,rideshare,13.4,,2.29,Uber trip,seed
+2026-03-28T19:00:49.599351,rideshare,8.3,,1.42,Uber receipt $24.50,seed
+2026-03-28T19:00:49.599351,car,45.0,,8.64,Weekend drive,seed
+2026-03-28T19:00:49.608206,flight,3983,,1015.66,Your flight confirmation — DL 1847 JFK → LAX,email_003
+2026-03-28T19:00:49.609889,gas,,12.4,113.64,Shell Fuel Receipt — March 28,email_004
+2026-03-28T19:01:33.620594,flight,3983,,1015.66,Your flight confirmation — DL 1847 JFK → LAX,email_003
+2026-03-28T19:01:33.621588,gas,,12.4,113.64,Shell Fuel Receipt — March 28,email_004
+2026-03-28T19:01:34.341354,flight,3983,,1015.66,Your flight confirmation — DL 1847 JFK → LAX,email_003
+2026-03-28T19:01:34.342356,gas,,12.4,113.64,Shell Fuel Receipt — March 28,email_004
+2026-03-28T19:01:34.838227,flight,3983,,1015.66,Your flight confirmation — DL 1847 JFK → LAX,email_003
+2026-03-28T19:01:34.839705,gas,,12.4,113.64,Shell Fuel Receipt — March 28,email_004
+2026-03-28T19:01:34.991462,flight,3983,,1015.66,Your flight confirmation — DL 1847 JFK → LAX,email_003
+2026-03-28T19:01:34.992386,gas,,12.4,113.64,Shell Fuel Receipt — March 28,email_004
+2026-03-28T19:01:35.137994,flight,3983,,1015.66,Your flight confirmation — DL 1847 JFK → LAX,email_003
+2026-03-28T19:01:35.139049,gas,,12.4,113.64,Shell Fuel Receipt — March 28,email_004
+2026-03-28T19:04:26.155818,flight,3983,,1015.66,Your flight confirmation — DL 1847 JFK → LAX,email_003
+2026-03-28T19:04:26.156695,gas,,12.4,113.64,Shell Fuel Receipt — March 28,email_004
