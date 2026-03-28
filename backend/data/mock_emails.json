@@ -1,0 +1,44 @@
+[
+  {
+    "id": "email_001",
+    "from": "noreply@uber.com",
+    "subject": "Your Tuesday trip with Uber",
+    "date": "2026-03-28T08:15:00Z",
+    "body": "Thanks for riding with Uber! Here's your receipt for your trip on Tuesday, March 28. Total: $24.50. Distance: 8.3 miles. Duration: 22 minutes. Payment: Visa ending in 4242."
+  },
+  {
+    "id": "email_002",
+    "from": "calendar-notification@google.com",
+    "subject": "Meeting invitation: Q2 Planning — Monday 3 PM",
+    "date": "2026-03-28T09:00:00Z",
+    "body": "You have been invited to a meeting: Q2 Planning Session. Date: Monday, March 30, 2026 at 3:00 PM – 4:30 PM EDT. Location: Conference Room B / Zoom. Organizer: sarah@company.com. Please RSVP."
+  },
+  {
+    "id": "email_003",
+    "from": "confirmation@delta.com",
+    "subject": "Your flight confirmation — DL 1847 JFK → LAX",
+    "date": "2026-03-28T10:30:00Z",
+    "body": "Flight Confirmation. Booking Reference: DELTA2826. Flight DL 1847. Departure: JFK (New York) on April 5, 2026 at 7:00 AM. Arrival: LAX (Los Angeles) at 10:15 AM. Distance: approximately 2,475 miles (3,983 km). Passenger: John Doe. Seat: 14A (Economy)."
+  },
+  {
+    "id": "email_004",
+    "from": "noreply@shell.com",
+    "subject": "Shell Fuel Receipt — March 28",
+    "date": "2026-03-28T07:00:00Z",
+    "body": "Shell Gas Station Receipt. Date: March 28, 2026. Location: 450 W 33rd St, New York, NY. Gallons dispensed: 12.4. Fuel type: Regular Unleaded. Price per gallon: $3.89. Total amount charged: $48.24. Payment: Mastercard ending in 5678."
+  },
+  {
+    "id": "email_005",
+    "from": "boss@company.com",
+    "subject": "Heads up — staying late tonight",
+    "date": "2026-03-28T11:45:00Z",
+    "body": "Hey, just a heads up — we have a critical client call this evening that's going to run until at least 7:30 PM. The whole team needs to stay in the office. I know you had your gym session planned for 6 PM tonight, you might want to push that back. Sorry for the short notice!"
+  },
+  {
+    "id": "email_006",
+    "from": "noreply@amazon.com",
+    "subject": "Your Amazon.com order of $156.82 has shipped",
+    "date": "2026-03-27T14:20:00Z",
+    "body": "Hello, your recent order has shipped. Order #112-4829374-2948573. Items: Anker USB-C Hub ($45.99), Moleskine Notebook 3-pack ($28.50), Coffee Beans — Dark Roast 2lb ($32.99), Desk Cable Management Kit ($18.75), Blue Light Blocking Glasses ($30.59). Order Total: $156.82. Estimated delivery: March 30, 2026."
+  }
+]
