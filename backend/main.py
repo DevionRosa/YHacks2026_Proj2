@@ -170,7 +170,15 @@ async def dashboard_summary():
     events   = list_events(days_ahead=7)
     spending = get_monthly_summary()
     carbon   = get_monthly_co2()
-    slot     = get_optimal_slot()
+    if "optimal_slot" in _CACHE:
+        slot = _CACHE["optimal_slot"]
+    else:
+        slot = get_optimal_slot(
+            "Gym Session",
+            duration_minutes=60,
+            window_start_hour=17,
+            window_end_hour=21,
+        )
 
     return JSONResponse({
         "briefing":     _CACHE.get("briefing", ""),
