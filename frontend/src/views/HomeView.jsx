@@ -10,8 +10,17 @@ import {
 } from 'recharts'
 import { Bot } from 'lucide-react'
 import TodoListPanel from '../components/TodoListPanel'
+import MommaChat from '../components/MommaChat'
 
-export default function HomeView({ data, logs, running, onRunPipeline, todoState }) {
+export default function HomeView({
+  data,
+  logs,
+  running,
+  onRunPipeline,
+  todoState,
+  sendChat,
+  chatSending,
+}) {
 
   const carbon = data?.carbon
   const weekChart = useMemo(
@@ -175,7 +184,7 @@ export default function HomeView({ data, logs, running, onRunPipeline, todoState
             </span>
             <div>
               <h2 className="agent-dock-heading">Momma</h2>
-              <p className="agent-dock-sub">Assistant — chat and actions will live here</p>
+              <p className="agent-dock-sub">Chat with live calendar, money &amp; footprint data</p>
             </div>
           </div>
           <button
@@ -188,11 +197,8 @@ export default function HomeView({ data, logs, running, onRunPipeline, todoState
           </button>
         </div>
         <div className="agent-dock-body">
-          <div className="agent-dock-chat-placeholder">
-            <p className="muted small">
-              Space reserved for conversational AI. For now, use <strong>Run assistant</strong> for a
-              fresh briefing.
-            </p>
+          <div className="agent-dock-chat-panel">
+            <MommaChat sendChat={sendChat} sending={chatSending} disabled={false} />
           </div>
           <div className="agent-dock-briefing">
             <h3 className="agent-dock-section-label">Daily briefing</h3>

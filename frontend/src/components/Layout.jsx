@@ -36,7 +36,7 @@ export default function Layout({
           </span>
           <div>
             <h1 className="header-title">Momma</h1>
-            <p className="header-sub">Your assistant — calendar, money, and footprint in one place</p>
+            <p className="header-sub">Chat, calendar, spending, and footprint in one place</p>
           </div>
         </div>
 
@@ -46,7 +46,7 @@ export default function Layout({
             className="btn btn-secondary"
             onClick={onRefresh}
             disabled={running}
-            title="Reload data from the server"
+            title="Reload dashboard from the server"
           >
             <RefreshCw size={18} aria-hidden />
             Refresh
@@ -57,6 +57,7 @@ export default function Layout({
             onClick={onRunPipeline}
             disabled={running}
             id="btn-run-pipeline"
+            title="Process mail and regenerate briefing"
           >
             <Play size={18} fill="currentColor" aria-hidden />
             {running ? 'Working…' : 'Run assistant'}

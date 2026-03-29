@@ -21,6 +21,8 @@ export default function App() {
     error,
     fetchDashboard,
     runPipeline,
+    sendChat,
+    chatSending,
   } = useMommaData()
 
   return (
@@ -52,6 +54,8 @@ export default function App() {
               running={running}
               onRunPipeline={runPipeline}
               todoState={todoState}
+              sendChat={sendChat}
+              chatSending={chatSending}
             />
           )}
           {tab === 'tasks' && <TasksView todoState={todoState} />}

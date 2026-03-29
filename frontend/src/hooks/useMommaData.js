@@ -67,6 +67,33 @@ export function useMommaData() {
     }
   }
 
+  const [chatSending, setChatSending] = useState(false)
+
+  const sendChat = useCallback(async (messages) => {
+    setChatSending(true)
+    try {
+      const res = await fetch(`${API_BASE}/api/chat`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ messages }),
+      })
+      if (!res.ok) {
+        const body = await res.json().catch(() => ({}))
+        const d = body.detail
+        let msg = typeof d === 'string' ? d : null
+        if (!msg && Array.isArray(d)) {
+          msg = d.map((x) => x.msg ?? x.message ?? JSON.stringify(x)).join(' ')
+        }
+        if (!msg && d && typeof d === 'object') msg = d.msg ?? d.message
+        throw new Error(msg || res.statusText || `Chat failed (${res.status})`)
+      }
+      const json = await res.json()
+      return json.message
+    } finally {
+      setChatSending(false)
+    }
+  }, [])
+
   return {
     data,
     loading,
@@ -76,5 +103,7 @@ export function useMommaData() {
     error,
     fetchDashboard,
     runPipeline,
+    sendChat,
+    chatSending,
   }
 }
