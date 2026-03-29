@@ -10,10 +10,13 @@ import os
 from contextlib import asynccontextmanager
 from datetime import datetime
 
+from typing import Literal
+
 from dotenv import load_dotenv
-from fastapi import FastAPI, WebSocket, WebSocketDisconnect
+from fastapi import FastAPI, HTTPException, WebSocket, WebSocketDisconnect
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
+from pydantic import BaseModel, Field
 
 load_dotenv()
 
@@ -124,6 +127,67 @@ async def get_carbon(year: int | None = None, month: int | None = None):
 
 
 # ── Pipeline ───────────────────────────────────────────────────────────────────
+
+# ── Conversational assistant ───────────────────────────────────────────────────
+
+
+class ChatMessageIn(BaseModel):
+    role: Literal["user", "assistant"]
+    content: str = Field(..., max_length=8000)
+
+
+class ChatRequest(BaseModel):
+    messages: list[ChatMessageIn] = Field(..., min_length=1, max_length=40)
+
+
+@app.post("/api/chat", tags=["assistant"])
+async def chat_endpoint(body: ChatRequest):
+    """Multi-turn chat grounded in live calendar, spending, and carbon data."""
+    from agent.calendar_client import get_optimal_slot, list_events
+    from agent.carbon_tracker import get_monthly_co2
+    from agent.finance_tracker import get_monthly_summary
+    from agent.llm_client import assistant_chat
+
+    events = list_events(days_ahead=7)
+    spending = get_monthly_summary()
+    carbon = get_monthly_co2()
+    if "optimal_slot" in _CACHE:
+        slot = _CACHE["optimal_slot"]
+    else:
+        slot = get_optimal_slot(
+            "Gym Session",
+            duration_minutes=60,
+            window_start_hour=17,
+            window_end_hour=21,
+        )
+
+    today_prefix = datetime.now().strftime("%Y-%m-%d")
+    stats = {
+        "events_today": sum(1 for e in events if e.get("start", "").startswith(today_prefix)),
+        "monthly_spend": spending.get("total", 0),
+        "spend_budget": spending.get("budget", 2000),
+        "monthly_co2_kg": carbon.get("total_kg", 0),
+        "co2_target_kg": float(os.getenv("MONTHLY_CO2_TARGET_KG", "200")),
+    }
+
+    briefing_full = _CACHE.get("briefing") or ""
+    context = {
+        "events": events[:20],
+        "spending": spending,
+        "carbon": carbon,
+        "stats": stats,
+        "optimal_slot": slot,
+        "briefing_excerpt": briefing_full[:2000],
+    }
+
+    msgs = [m.model_dump() for m in body.messages]
+    last = msgs[-1]
+    if last.get("role") != "user":
+        raise HTTPException(status_code=400, detail="Last message must be from the user.")
+
+    reply = await assistant_chat(msgs, context)
+    return JSONResponse({"message": {"role": "assistant", "content": reply}})
+
 
 @app.post("/api/run-pipeline", tags=["pipeline"])
 async def run_pipeline_endpoint(email_source: str = "mock"):
