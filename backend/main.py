@@ -1,205 +1,132 @@
-"""
-Momma — FastAPI Backend
-Exposes all agent capabilities via REST endpoints + WebSocket log stream.
-"""
-
-import asyncio
-import json
-import logging
-import os
+import logging, json, csv, os, sys
+from datetime import date
 from contextlib import asynccontextmanager
-from datetime import datetime
-
-from dotenv import load_dotenv
-from fastapi import FastAPI, WebSocket, WebSocketDisconnect
+from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 
-load_dotenv()
+# Standard Flat Structure path fix
+current_dir = os.path.dirname(os.path.abspath(__file__))
+if current_dir not in sys.path:
+    sys.path.insert(0, current_dir)
 
-logging.basicConfig(
-    level=logging.INFO,
-    format="%(asctime)s [%(name)s] %(levelname)s — %(message)s",
-)
+from secretary import SYSTEM_PROMPTS, client
+from database import session, DailyEmissions
+from add_task import add_task_to_db, load_mock_emails
+
+logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(name)s] %(levelname)s — %(message)s")
 logger = logging.getLogger("momma.api")
-
-FRONTEND_URL = os.getenv("FRONTEND_URL", "http://localhost:5173")
-
-# ── Startup ────────────────────────────────────────────────────────────────────
-
-# Cache for last pipeline run (avoids re-running on every dashboard load)
-_CACHE: dict = {}
-
+_CACHE = {"briefing": "Sync your inbox to generate your briefing."}
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    logger.info("🤖 Momma API starting — running initial pipeline...")
-    from agent.momma import run_pipeline
-    result = await run_pipeline(email_source=os.getenv("EMAIL_SOURCE", "mock"))
-    _CACHE.update(result)
-    logger.info("✅ Initial pipeline complete")
+    logger.info("🤖 Momma API Initializing...")
     yield
 
+app = FastAPI(title="Momma AI", lifespan=lifespan)
+app.add_middleware(CORSMiddleware, allow_origins=["*"], allow_methods=["*"], allow_headers=["*"])
 
-app = FastAPI(
-    title="Momma — Personal Secretary API",
-    description="Autonomous AI personal secretary: email parsing, calendar management, finance & carbon tracking.",
-    version="1.0.0",
-    lifespan=lifespan,
-)
+@app.get("/dashboard-data")
+async def get_dashboard():
+    # Use date.today() instead of a hardcoded string to stay in sync
+    today_date = date.today() 
+    day_entry = session.query(DailyEmissions).filter_by(date=today_date).first()
+    
+    return {
+        "briefing": _CACHE["briefing"],
+        "total_kg": day_entry.total_kg if day_entry else 0.0,
+        "tasks": [
+            {
+                "text": t.task_name, 
+                "time": t.time_period, 
+                "location": t.location, 
+                "done": False, 
+                "id": t.id
+            } for t in day_entry.tasks
+        ] if day_entry else []
+    }
 
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=[
-        FRONTEND_URL,
-        "http://localhost:3000",
-        "http://localhost:5173",
-        "http://localhost:5174",
-        "http://localhost:5175",
-    ],
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
-
-
-# ── Health ─────────────────────────────────────────────────────────────────────
-
-@app.get("/api/health", tags=["system"])
-async def health():
-    return {"status": "ok", "time": datetime.utcnow().isoformat(), "agent": "Momma v1.0"}
-
-
-# ── Briefing ───────────────────────────────────────────────────────────────────
-
-@app.get("/api/briefing", tags=["briefing"])
-async def get_briefing():
-    """Return the cached daily briefing Markdown string."""
-    return JSONResponse({"briefing": _CACHE.get("briefing", ""), "generated_at": datetime.utcnow().isoformat()})
-
-
-# ── Calendar ───────────────────────────────────────────────────────────────────
-
-@app.get("/api/events", tags=["calendar"])
-async def get_events(days: int = 7):
-    """List upcoming calendar events."""
-    from agent.calendar_client import list_events
-    return JSONResponse({"events": list_events(days_ahead=days)})
-
-
-@app.post("/api/events", tags=["calendar"])
-async def create_event(title: str, start: str, end: str,
-                       location: str | None = None, description: str | None = None):
-    """Manually create a calendar event."""
-    from agent.calendar_client import insert_event
-    ev = insert_event(title, start, end, location, description)
-    return JSONResponse({"event": ev})
-
-
-@app.get("/api/optimal-slot", tags=["calendar"])
-async def optimal_slot(task: str = "Gym Session", duration: int = 60,
-                       window_start: int = 17, window_end: int = 21):
-    """Find the optimal free slot for a task today."""
-    from agent.calendar_client import get_optimal_slot
-    slot = get_optimal_slot(task, duration, window_start, window_end)
-    return JSONResponse({"slot": slot})
-
-
-# ── Finance ────────────────────────────────────────────────────────────────────
-
-@app.get("/api/spending", tags=["finance"])
-async def get_spending(year: int | None = None, month: int | None = None):
-    """Get monthly spending summary."""
-    from agent.finance_tracker import get_monthly_summary
-    return JSONResponse(get_monthly_summary(year, month))
-
-
-# ── Carbon ─────────────────────────────────────────────────────────────────────
-
-@app.get("/api/carbon", tags=["carbon"])
-async def get_carbon(year: int | None = None, month: int | None = None):
-    """Get monthly CO2 emission summary."""
-    from agent.carbon_tracker import get_monthly_co2
-    return JSONResponse(get_monthly_co2(year, month))
-
-
-# ── Pipeline ───────────────────────────────────────────────────────────────────
-
-@app.post("/api/run-pipeline", tags=["pipeline"])
-async def run_pipeline_endpoint(email_source: str = "mock"):
-    """Trigger a full email processing pipeline run."""
-    from agent.momma import run_pipeline
-    result = await run_pipeline(email_source=email_source)
-    _CACHE.update(result)
-    return JSONResponse({
-        "status": "complete",
-        "emails_processed": sum(
-            len(v) for v in result["pipeline_results"].values()
-        ),
-        "briefing_preview": result["briefing"][:200] + "...",
-        "logs": result["logs"],
-    })
-
-
-# ── WebSocket Log Stream ────────────────────────────────────────────────────────
-
-_ws_clients: list[WebSocket] = []
-
-
-@app.websocket("/ws/logs")
-async def websocket_logs(ws: WebSocket):
-    """Stream real-time pipeline logs to the frontend."""
-    await ws.accept()
-    _ws_clients.append(ws)
+@app.get("/api/spending")
+async def get_spending():
+    categories = {}
+    transactions = []
+    total = 0
     try:
-        from agent.momma import get_pipeline_logs
-        # Send existing logs immediately
-        for log in get_pipeline_logs():
-            await ws.send_text(json.dumps(log))
-        # Keep alive — broadcast future logs
-        while True:
-            await asyncio.sleep(1)
-    except WebSocketDisconnect:
-        _ws_clients.remove(ws)
+        with open('spending_log.csv', mode='r') as file:
+            reader = csv.DictReader(file)
+            for row in reader:
+                amt = float(row['amount'])
+                cat = row['category']
+                categories[cat] = categories.get(cat, 0) + amt
+                transactions.append({
+                    "vendor": row['vendor'], 
+                    "category": cat, 
+                    "amount": amt, 
+                    "date": row['timestamp'].split('T')[0]
+                })
+                total += amt
+        graph_data = [{"category": k.capitalize(), "amount": v} for k, v in categories.items()]
+        transactions.sort(key=lambda x: x['date'], reverse=True)
+        return {"graph_data": graph_data, "transactions": transactions[:15], "total": total}
+    except Exception as e:
+        return {"graph_data": [], "transactions": [], "total": 0}
 
-
-# ── Dashboard Summary ──────────────────────────────────────────────────────────
-
-@app.get("/api/dashboard", tags=["dashboard"])
-async def dashboard_summary():
-    """All-in-one endpoint for the frontend dashboard."""
-    from agent.calendar_client import list_events
-    from agent.finance_tracker import get_monthly_summary
-    from agent.carbon_tracker import get_monthly_co2
-    from agent.calendar_client import get_optimal_slot
-
-    events   = list_events(days_ahead=7)
-    spending = get_monthly_summary()
-    carbon   = get_monthly_co2()
-    if "optimal_slot" in _CACHE:
-        slot = _CACHE["optimal_slot"]
-    else:
-        slot = get_optimal_slot(
-            "Gym Session",
-            duration_minutes=60,
-            window_start_hour=17,
-            window_end_hour=21,
+@app.get("/api/carbon-intelligence")
+async def carbon_intelligence():
+    """Generates weekly carbon trend data and AI analysis blurb."""
+    mock_weekly = [
+        {"day": "Mon", "kg": 12.4}, {"day": "Tue", "kg": 15.1},
+        {"day": "Wed", "kg": 8.2}, {"day": "Thu", "kg": 22.5},
+        {"day": "Fri", "kg": 14.8}, {"day": "Sat", "kg": 18.2},
+        {"day": "Today", "kg": 4.2}
+    ]
+    prompt = "Compare today's 4.2kg emissions to the weekly average and provide a 1-sentence reduction tip."
+    
+    try:
+        response = client.chat.completions.create(
+            model="MBZUAI-IFM/K2-Think-v2", # Correct model name
+            messages=[{"role": "user", "content": prompt}]
         )
+        content = response.choices[0].message.content
+        
+        # Clean out thinking tokens if present
+        if "</think>" in content:
+            content = content.split("</think>")[-1].strip()
+            
+        return {"weekly": mock_weekly, "analysis": content}
+    except Exception as e:
+        logger.error(f"Carbon AI Error: {e}")
+        return {
+            "weekly": mock_weekly, 
+            "analysis": "Compare your daily usage to the weekly average to identify spikes in your footprint."
+        }
 
-    return JSONResponse({
-        "briefing":     _CACHE.get("briefing", ""),
-        "events":       events,
-        "spending":     spending,
-        "carbon":       carbon,
-        "optimal_slot": slot,
-        "stats": {
-            "events_today": sum(
-                1 for e in events
-                if e["start"].startswith(datetime.now().strftime("%Y-%m-%d"))
-            ),
-            "monthly_spend":    spending.get("total", 0),
-            "spend_budget":     spending.get("budget", 2000),
-            "monthly_co2_kg":   carbon.get("total_kg", 0),
-            "co2_target_kg":    float(os.getenv("MONTHLY_CO2_TARGET_KG", "200")),
-        },
-    })
+@app.post("/parse-intent")
+async def parse_intent(request: Request):
+    body = await request.json()
+    response = client.chat.completions.create(
+        model="MBZUAI-IFM/K2-Think-v2",
+        messages=[{"role": "system", "content": SYSTEM_PROMPTS["calendar_maker"]}, {"role": "user", "content": body.get("text", "")}],
+        response_format={"type": "json_object"}
+    )
+    content = response.choices[0].message.content
+    if "</think>" in content: content = content.split("</think>")[-1]
+    return json.loads(content)
+
+@app.get("/sync-emails")
+async def sync_emails():
+    emails = load_mock_emails()
+    response = client.chat.completions.create(
+        model="MBZUAI-IFM/K2-Think-v2",
+        messages=[{"role": "system", "content": SYSTEM_PROMPTS["email_parser"]}, {"role": "user", "content": json.dumps(emails)}]
+    )
+    content = response.choices[0].message.content
+    if "</think>" in content: content = content.split("</think>")[-1]
+    _CACHE["briefing"] = content
+    return {"analysis": content}
+
+@app.post("/add-task")
+async def add_task_endpoint(request: Request):
+    body = await request.json()
+    success = add_task_to_db(body['date'], body['task'])
+    return {"status": "success" if success else "failed"}

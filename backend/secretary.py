@@ -1,10 +1,11 @@
 from openai import OpenAI
-from config import config
-
+from config import Config
+# import os
+# import json
 
 client = OpenAI(
-    api_key=config.K2_API_KEY,
-    base_url=config.K2_BASE_URL
+    api_key=Config.K2_API_KEY,
+    base_url=Config.K2_BASE_URL
 )
 
 SYSTEM_PROMPTS = {
@@ -17,8 +18,12 @@ SYSTEM_PROMPTS = {
     
     "email_parser": (
         "You are an expert email triage assistant. Categorize emails into 'Important' or 'Unimportant'. "
-        "1. List all Important emails with a 1-sentence summary for each. "
-        "2. Provide a single, extremely brief summary for all Unimportant emails (e.g., 'You had 5 newsletters and 10 spam alerts')."
+        "DO NOT show your thinking process. DO NOT include any introductory text or conversational filler. "
+        "Provide ONLY the following structure: "
+        "### Important Emails\n"
+        "[Email ID]: [1-sentence summary]\n\n"
+        "### Unimportant Emails\n"
+        "You had [X] receipts/newsletters ([List categories])."
     ),
     
    "daily_carbon_calculator": (
@@ -52,5 +57,25 @@ def get_k2_completion(user_input, case_type="default"):
     )
     return response.choices[0].message.content
 
-# Usage
-# print(get_k2_completion("Fix this Python bug.", case_type="coder"))
+#Test
+
+# # Usage
+# def load_mock_emails():
+#     # 1. Get the absolute path of the current file (add_task.py)
+#     current_dir = os.path.dirname(os.path.abspath(__file__))
+    
+#     # 2. Go up to 'backend/' then into 'data/mock_emails.json'
+#     # Path: backend/agent/ -> .. -> data/mock_emails.json
+#     file_path = os.path.join(current_dir, '..', 'data', 'mock_emails.json')
+    
+#     # 3. Standardize the path for the OS (Windows vs Mac/Linux)
+#     normalized_path = os.path.normpath(file_path)
+    
+#     with open(normalized_path, 'r') as f:
+#         return json.load(f)
+
+# emails = load_mock_emails()
+# # Pass the email list to K2
+# ai_analysis = get_k2_completion(json.dumps(emails), case_type="email_parser")
+# print(ai_analysis)
+

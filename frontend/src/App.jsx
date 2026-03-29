@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import Layout from './components/Layout'
 import { useMommaData } from './hooks/useMommaData'
 import { useTodos } from './hooks/useTodos'
@@ -6,62 +6,55 @@ import HomeView from './views/HomeView'
 import CalendarView from './views/CalendarView'
 import SpendingView from './views/SpendingView'
 import CarbonView from './views/CarbonView'
-import TasksView from './views/TasksView'
 import './index.css'
 
 export default function App() {
   const [tab, setTab] = useState('home')
+  const { data, loading, error, runPipeline } = useMommaData()
   const todoState = useTodos()
-  const {
-    data,
-    loading,
-    running,
-    logs,
-    wsConnected,
-    error,
-    fetchDashboard,
-    runPipeline,
-  } = useMommaData()
+
+  // Sync Backend Tasks to the Todo Hook when data loads
+  useEffect(() => {
+    if (data?.tasks) {
+      // Clear local default todos and load backend tasks
+      todoState.set(data.tasks);
+    }
+  }, [data]);
 
   return (
-    <Layout
-      activeTab={tab}
-      onTabChange={setTab}
-      onRunPipeline={runPipeline}
-      onRefresh={fetchDashboard}
-      running={running}
-      wsConnected={wsConnected}
-    >
-      {error && (
-        <div className="banner-error" role="alert">
-          {error}
-        </div>
-      )}
+    <Layout activeTab={tab} onTabChange={setTab}>
+      {error && <div className="banner-error">{error}</div>}
 
-      {loading && tab !== 'tasks' ? (
-        <div className="panel panel-center load-panel">
-          <div className="spinner" />
-          <p className="muted">Loading your data…</p>
-        </div>
-      ) : (
-        <>
-          {tab === 'home' && (
-            <HomeView
-              data={data}
-              logs={logs}
-              running={running}
-              onRunPipeline={runPipeline}
-              todoState={todoState}
-            />
-          )}
-          {tab === 'tasks' && <TasksView todoState={todoState} />}
-          {tab === 'calendar' && <CalendarView events={data?.events ?? []} />}
-          {tab === 'spending' && <SpendingView spending={data?.spending} />}
-          {tab === 'carbon' && (
-            <CarbonView carbon={data?.carbon} stats={data?.stats} />
-          )}
-        </>
-      )}
+      <div className="view-wrapper">
+        {loading ? (
+          <div className="empty-state-centered">
+            <div className="spinning" style={{ border: '2px solid #ff69b4', borderRadius: '50%', width: '40px', height: '40px', borderTopColor: 'transparent' }} />
+          </div>
+        ) : (
+          <>
+            {tab === 'home' && (
+              <HomeView
+                briefing={data?.briefing}
+                totalKg={data?.total_kg}
+                todoState={todoState}
+                onSync={runPipeline}
+              />
+            )}
+
+            {tab === 'calendar' && (
+              <CalendarView todoState={todoState} />
+            )}
+
+            {tab === 'spending' && (
+              <SpendingView />
+            )}
+
+            {tab === 'carbon' && (
+              <CarbonView />
+            )}
+          </>
+        )}
+      </div>
     </Layout>
   )
 }

@@ -1,200 +1,89 @@
-import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer } from 'recharts'
+import React, { useState, useEffect } from 'react';
+import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
+import { Leaf, TrendingDown, Loader2 } from 'lucide-react';
 
-const MODE_COLORS = {
-  flight: '#3b5bdb',
-  gas: '#d97706',
-  rideshare: '#0891b2',
-  car: '#dc2626',
-  train: '#0d9488',
-  other: '#64748b',
-}
+export default function CarbonView() {
+  const [weeklyData, setWeeklyData] = useState([]);
+  const [analysis, setAnalysis] = useState('');
+  const [loading, setLoading] = useState(true);
 
-const MODE_LABEL = {
-  flight: 'Flight',
-  gas: 'Gas',
-  rideshare: 'Rideshare',
-  car: 'Car',
-  train: 'Train',
-  other: 'Other',
-}
+  useEffect(() => {
+    fetch('http://127.0.0.1:8000/api/carbon-intelligence')
+      .then(res => res.json())
+      .then(data => {
+        setWeeklyData(data.weekly || []);
+        setAnalysis(data.analysis || "");
+        setLoading(false);
+      })
+      .catch(err => {
+        console.error("Carbon fetch error:", err);
+        setLoading(false);
+      });
+  }, []);
 
-function PieTooltip({ active, payload }) {
-  if (!active || !payload?.length) return null
-  const d = payload[0]
-  return (
-    <div className="chart-tooltip">
-      <div className="chart-tooltip-title">{MODE_LABEL[d.name] ?? d.name}</div>
-      <div className="chart-tooltip-value">{Number(d.value).toFixed(2)} kg CO₂</div>
+  if (loading) return (
+    <div className="empty-state-centered">
+      <Loader2 className="spinning text-[#ff69b4]" size={40} />
     </div>
-  )
-}
-
-function Gauge({ pct, totalKg, targetKg }) {
-  const r = 72
-  const circ = 2 * Math.PI * r
-  const filled = circ * Math.min(pct / 100, 1)
-  const color = pct > 90 ? '#dc2626' : pct > 65 ? '#d97706' : '#0d9488'
+  );
 
   return (
-    <div className="gauge-wrap">
-      <svg width={180} height={180} viewBox="0 0 180 180" aria-hidden>
-        <circle cx={90} cy={90} r={r} fill="none" stroke="#e8ecf4" strokeWidth={12} />
-        <circle
-          cx={90}
-          cy={90}
-          r={r}
-          fill="none"
-          stroke={color}
-          strokeWidth={12}
-          strokeDasharray={`${filled} ${circ}`}
-          strokeLinecap="round"
-          transform="rotate(-90 90 90)"
-        />
-        <text x={90} y={82} textAnchor="middle" fill={color} fontSize="22" fontWeight="700">
-          {totalKg.toFixed(1)}
-        </text>
-        <text x={90} y={100} textAnchor="middle" fill="#64748b" fontSize="11">
-          kg CO₂
-        </text>
-        <text x={90} y={116} textAnchor="middle" fill="#94a3b8" fontSize="10">
-          of {targetKg} kg goal
-        </text>
-      </svg>
-      <p className="gauge-caption">{pct.toFixed(1)}% of monthly goal</p>
-    </div>
-  )
-}
-
-const TIPS = [
-  'Direct flights often use less fuel than multi-stop routes.',
-  'Short trips by bike or transit add up to real savings.',
-  'Certified offsets can balance unavoidable travel emissions.',
-]
-
-export default function CarbonView({ carbon, stats }) {
-  if (!carbon) {
-    return (
-      <div className="panel panel-center empty-panel">
-        <p className="empty-title">No carbon data</p>
-        <p className="muted">Run the assistant to estimate footprint.</p>
-      </div>
-    )
-  }
-
-  const { total_kg, by_mode, entries } = carbon
-  const target = stats?.co2_target_kg ?? 200
-  const pct = Math.min(100, (total_kg / target) * 100)
-
-  const pieData = Object.entries(by_mode ?? {}).map(([mode, kg]) => ({
-    name: mode,
-    value: kg,
-    fill: MODE_COLORS[mode] ?? '#64748b',
-  }))
-
-  return (
-    <div className="stack">
-      <div className="two-col">
-        <section className="panel">
-          <h2 className="section-title">This month</h2>
-          <Gauge pct={pct} totalKg={total_kg} targetKg={target} />
-          <div className="panel-pad">
-            {Object.entries(by_mode ?? {}).map(([mode, kg]) => {
-              const modePct = total_kg > 0 ? (kg / total_kg) * 100 : 0
-              const color = MODE_COLORS[mode] ?? '#64748b'
-              return (
-                <div key={mode} className="progress-block">
-                  <div className="progress-head">
-                    <span>{MODE_LABEL[mode] ?? mode}</span>
-                    <span className="small">{kg.toFixed(2)} kg</span>
-                  </div>
-                  <div className="progress-track">
-                    <div
-                      className="progress-fill"
-                      style={{ width: `${modePct}%`, background: color }}
-                    />
-                  </div>
-                </div>
-              )
-            })}
+    <div className="pro-container">
+      <section className="dashboard-half">
+        <header className="section-header">
+          <div className="title-group">
+            <Leaf size={20} className="accent-icon" />
+            <h2 className="pro-title">CO₂ Emission Trends</h2>
           </div>
-        </section>
+        </header>
 
-        <div className="stack stack-tight">
-          <section className="panel">
-            <h2 className="section-title">By travel mode</h2>
-            <div className="chart-wrap chart-wrap-short">
-              {pieData.length === 0 ? (
-                <p className="muted panel-pad">No split yet.</p>
-              ) : (
-                <ResponsiveContainer width="100%" height={200}>
-                  <PieChart>
-                    <Pie
-                      data={pieData}
-                      dataKey="value"
-                      nameKey="name"
-                      cx="50%"
-                      cy="50%"
-                      innerRadius={50}
-                      outerRadius={78}
-                      paddingAngle={2}
-                      strokeWidth={0}
-                    >
-                      {pieData.map((d, i) => (
-                        <Cell key={i} fill={d.fill} />
-                      ))}
-                    </Pie>
-                    <Tooltip content={<PieTooltip />} />
-                  </PieChart>
-                </ResponsiveContainer>
-              )}
-            </div>
-          </section>
-
-          <section className="panel">
-            <h2 className="section-title">Quick tips</h2>
-            <ul className="tip-list">
-              {TIPS.map((t, i) => (
-                <li key={i}>{t}</li>
-              ))}
-            </ul>
-          </section>
+        <div className="content-card carbon-chart-card" style={{ height: '350px', padding: '20px' }}>
+          <ResponsiveContainer width="100%" height="100%">
+            <AreaChart data={weeklyData}>
+              <defs>
+                <linearGradient id="colorKg" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="5%" stopColor="#ff69b4" stopOpacity={0.3} />
+                  <stop offset="95%" stopColor="#ff69b4" stopOpacity={0} />
+                </linearGradient>
+              </defs>
+              <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="rgba(255,255,255,0.05)" />
+              <XAxis
+                dataKey="day"
+                axisLine={false}
+                tickLine={false}
+                tick={{ fill: '#94a3b8', fontSize: 12 }}
+              />
+              <YAxis hide />
+              <Tooltip
+                contentStyle={{ backgroundColor: '#1e2229', border: '1px solid #2a303a', borderRadius: '8px' }}
+                itemStyle={{ color: '#ff69b4' }}
+              />
+              <Area
+                type="monotone"
+                dataKey="kg"
+                stroke="#ff69b4"
+                fillOpacity={1}
+                fill="url(#colorKg)"
+                strokeWidth={3}
+              />
+            </AreaChart>
+          </ResponsiveContainer>
         </div>
-      </div>
+      </section>
 
-      <section className="panel">
-        <div className="panel-head">
-          <h2 className="section-title">Emission events</h2>
-          <span className="badge badge-green">{(entries ?? []).length}</span>
-        </div>
-        {(entries ?? []).length === 0 ? (
-          <p className="muted panel-pad">No events logged.</p>
-        ) : (
-          <div className="table-wrap">
-            <table className="data-table">
-              <thead>
-                <tr>
-                  <th>Mode</th>
-                  <th>Details</th>
-                  <th>Date</th>
-                  <th className="cell-right">CO₂ (kg)</th>
-                </tr>
-              </thead>
-              <tbody>
-                {[...(entries ?? [])].reverse().map((e, i) => (
-                  <tr key={i}>
-                    <td>
-                      <span className="tag">{MODE_LABEL[e.mode] ?? e.mode}</span>
-                    </td>
-                    <td className="muted cell-clip">{e.description || '—'}</td>
-                    <td className="muted">{e.date}</td>
-                    <td className="cell-right cell-strong">{e.co2_kg.toFixed(2)}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+      <section className="dashboard-half mt-6">
+        <header className="section-header">
+          <div className="title-group">
+            <TrendingDown size={20} className="accent-icon" />
+            <h2 className="pro-title">AI Carbon Intelligence</h2>
           </div>
-        )}
+        </header>
+        <div className="content-card ai-blurb-card p-6">
+          <p className="ai-text-blurb text-[#94a3b8] leading-relaxed">
+            {analysis || "Analysis pending synchronization..."}
+          </p>
+        </div>
       </section>
     </div>
-  )
+  );
 }

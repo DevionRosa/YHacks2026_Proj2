@@ -1,108 +1,181 @@
-const COLOR = {
-  blue: '#3b5bdb',
-  green: '#0d9488',
-  orange: '#d97706',
-  red: '#dc2626',
-  purple: '#7c3aed',
-}
+import React, { useState, useEffect, useRef } from 'react';
+import { MessageSquare, Calendar as CalIcon, MapPin, Clock, Send, Check, Loader2 } from 'lucide-react';
 
-export default function CalendarView({ events = [] }) {
-  const sorted = [...events].sort((a, b) => a.start?.localeCompare(b.start))
-  const grouped = sorted.reduce((acc, ev) => {
-    const day = ev.start?.slice(0, 10) ?? 'Unknown'
-    if (!acc[day]) acc[day] = []
-    acc[day].push(ev)
-    return acc
-  }, {})
+export default function CalendarView({ todoState }) {
+  if (!todoState) return <div className="p-8 text-[#ff69b4]">Initializing State...</div>;
 
-  const formatDate = (iso) => {
+  const [messages, setMessages] = useState([
+    { role: 'ai', content: "Hi! Ready to organize your day? Tell me the task, time, and location." }
+  ]);
+  const [userInput, setUserInput] = useState('');
+  const [isParsing, setIsParsing] = useState(false);
+  const [proposal, setProposal] = useState(null);
+  const chatEndRef = useRef(null);
+
+  useEffect(() => {
+    chatEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  }, [messages, isParsing]);
+
+  const handleSendMessage = async (e) => {
+    e.preventDefault();
+    if (!userInput.trim() || isParsing) return;
+
+    const currentInput = userInput;
+    setMessages(prev => [...prev, { role: 'user', content: currentInput }]);
+    setUserInput('');
+    setIsParsing(true);
+
     try {
-      return new Date(iso + 'T00:00:00').toLocaleDateString('en-US', {
-        weekday: 'long',
-        month: 'long',
-        day: 'numeric',
-      })
-    } catch {
-      return iso
-    }
-  }
+      // Hits the FastAPI backend on port 8000
+      const res = await fetch('http://127.0.0.1:8000/parse-intent', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ text: currentInput })
+      });
 
-  const formatTime = (iso) => {
+      if (!res.ok) {
+        const errorText = res.status === 503 ? "Agent is busy, try again." : "Connection error.";
+        throw new Error(errorText);
+      }
+
+      const data = await res.json();
+
+      if (data.task && data.time) {
+        setProposal(data);
+        setMessages(prev => [...prev, { role: 'ai', content: "I've prepared a draft for your calendar. Does this look right?" }]);
+      } else {
+        setMessages(prev => [...prev, { role: 'ai', content: "I couldn't quite catch the details. Could you specify the task and time again?" }]);
+      }
+    } catch (err) {
+      setMessages(prev => [...prev, { role: 'ai', content: err.message || "Sync error. Is the backend live?" }]);
+    } finally {
+      setIsParsing(false);
+    }
+  };
+
+  const confirmTask = async () => {
+    if (!proposal) return;
     try {
-      return new Date(iso).toLocaleTimeString('en-US', {
-        hour: 'numeric',
-        minute: '2-digit',
-      })
-    } catch {
-      return iso
-    }
-  }
+      const res = await fetch('http://127.0.0.1:8000/add-task', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          date: "2026-03-28", // Matches the seed date in database.py
+          task: {
+            name: proposal.task,
+            location: proposal.location,
+            time: proposal.time,
+            category: "calendar",
+            value: 1.0
+          }
+        })
+      });
 
-  const duration = (start, end) => {
-    try {
-      const mins = (new Date(end) - new Date(start)) / 60000
-      return mins >= 60
-        ? `${(mins / 60).toFixed(1).replace('.0', '')} h`
-        : `${Math.round(mins)} min`
-    } catch {
-      return ''
+      if (res.ok) {
+        // Adds the structured object to local state
+        todoState.add(proposal.task, proposal.time, proposal.location);
+        setProposal(null);
+        setMessages(prev => [...prev, { role: 'ai', content: "Successfully added to your schedule and carbon tracker." }]);
+      }
+    } catch (err) {
+      console.error("Confirmation failed:", err);
     }
-  }
-
-  if (events.length === 0) {
-    return (
-      <div className="panel panel-center empty-panel">
-        <p className="empty-title">No events yet</p>
-        <p className="muted">Run the assistant to load your calendar.</p>
-      </div>
-    )
-  }
+  };
 
   return (
-    <div className="stack">
-      {Object.entries(grouped).map(([day, dayEvents]) => {
-        const isToday = day === new Date().toISOString().slice(0, 10)
-        return (
-          <section key={day} className="panel">
-            <div className="day-header">
-              <h2 className="day-title">
-                {isToday ? 'Today — ' : ''}
-                {formatDate(day)}
-              </h2>
-              <span className="badge">{dayEvents.length}</span>
+    <div className="pro-container calendar-layout-grid">
+      {/* LEFT: CHATBOT SECTION */}
+      <section className="calendar-half chat-zone">
+        <header className="agent-header">
+          <MessageSquare size={24} className="accent-icon mb-1" />
+          <h2 className="agent-title">Scheduling Agent</h2>
+        </header>
+
+        <div className="content-card chat-card-compact">
+          <div className="chat-flow custom-scrollbar">
+            {messages.map((m, i) => (
+              <div key={i} className={`msg-bubble ${m.role}`}>{m.content}</div>
+            ))}
+            {isParsing && (
+              <div className="msg-bubble ai">
+                <Loader2 className="animate-spin" size={14} />
+              </div>
+            )}
+            <div ref={chatEndRef} />
+          </div>
+
+          {proposal && (
+            <div className="proposal-overlay animate-slide-up">
+              <h4 className="proposal-confirm-title">Confirm New Entry</h4>
+              <div className="proposal-data">
+                <p><Check size={12} /> {proposal.task}</p>
+                <p><Clock size={12} /> {proposal.time}</p>
+                <p><MapPin size={12} /> {proposal.location || 'Not specified'}</p>
+              </div>
+              <div className="proposal-btns">
+                <button onClick={confirmTask} className="btn-confirm-mini">Add Task</button>
+                <button onClick={() => setProposal(null)} className="btn-cancel-mini">Cancel</button>
+              </div>
             </div>
-            <ul className="calendar-list">
-              {dayEvents.map((ev) => {
-                const c = COLOR[ev.color] ?? COLOR.blue
-                return (
-                  <li key={ev.id} className="calendar-card">
-                    <span
-                      className="calendar-accent"
-                      style={{ background: c }}
-                      aria-hidden
-                    />
-                    <div className="calendar-card-body">
-                      <div className="calendar-card-top">
-                        <div>
-                          <div className="calendar-card-title">{ev.title}</div>
-                          <div className="calendar-card-meta">
-                            {formatTime(ev.start)} – {formatTime(ev.end)}
-                            {ev.location && <span> · {ev.location}</span>}
-                          </div>
-                          {ev.description && (
-                            <p className="calendar-desc">{ev.description}</p>
-                          )}
-                        </div>
-                        <span className="duration-pill">{duration(ev.start, ev.end)}</span>
-                      </div>
+          )}
+
+          <form className="todo-input-group mt-4" onSubmit={handleSendMessage}>
+            <input
+              className="todo-input"
+              value={userInput}
+              onChange={e => setUserInput(e.target.value)}
+              placeholder="e.g. Yoga at 6pm in the Gym"
+            />
+            <button type="submit" className="btn-add-task" disabled={isParsing}>
+              <Send size={18} />
+            </button>
+          </form>
+        </div>
+      </section>
+
+      {/* RIGHT: TODAY'S CALENDAR */}
+      <section className="calendar-half schedule-zone">
+        <header className="agent-header">
+          <CalIcon size={24} className="accent-icon mb-1" />
+          <h2 className="agent-title">Today's Calendar</h2>
+        </header>
+        <div className="content-card schedule-card">
+          <div className="schedule-list custom-scrollbar">
+            {todoState.todos.length === 0 ? (
+              <p className="empty-msg">No tasks scheduled for today.</p>
+            ) : (
+              todoState.todos.map((t) => (
+                <div key={t.id} className="schedule-item-pro">
+                  <div className="item-accent" />
+                  <div className="item-content-wrapper">
+                    <div className="item-main-row">
+                      <span className={`item-name ${t.done ? 'text-strike' : ''}`}>
+                        {t.text}
+                      </span>
                     </div>
-                  </li>
-                )
-              })}
-            </ul>
-          </section>
-        )
-      })}
+
+                    {/* SENIOR FIX: Render using the direct properties from the hook */}
+                    {(t.time || t.location) && (
+                      <div className="item-meta-row">
+                        {t.time && (
+                          <span className="meta-tag">
+                            <Clock size={12} /> {t.time}
+                          </span>
+                        )}
+                        {t.location && (
+                          <span className="meta-tag">
+                            <MapPin size={12} /> {t.location}
+                          </span>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                </div>
+              ))
+            )}
+          </div>
+        </div>
+      </section>
     </div>
-  )
+  );
 }

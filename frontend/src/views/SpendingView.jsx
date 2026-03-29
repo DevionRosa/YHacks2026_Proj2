@@ -1,170 +1,109 @@
-import {
-  BarChart,
-  Bar,
-  XAxis,
-  YAxis,
-  Tooltip,
-  ResponsiveContainer,
-  Cell,
-} from 'recharts'
+import React, { useState, useEffect } from 'react';
+import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell } from 'recharts';
+import { Wallet, CreditCard, ArrowUpRight } from 'lucide-react';
 
-const CAT_COLORS = {
-  transport: '#3b5bdb',
-  food: '#0d9488',
-  shopping: '#d97706',
-  utilities: '#0891b2',
-  travel: '#7c3aed',
-  other: '#64748b',
-}
-
-const CAT_LABEL = {
-  transport: 'Transport',
-  food: 'Food',
-  shopping: 'Shopping',
-  utilities: 'Utilities',
-  travel: 'Travel',
-  other: 'Other',
-}
-
-function ChartTooltip({ active, payload }) {
-  if (!active || !payload?.length) return null
-  const d = payload[0].payload
-  return (
-    <div className="chart-tooltip">
-      <div className="chart-tooltip-title">{CAT_LABEL[d.category] ?? d.category}</div>
-      <div className="chart-tooltip-value">${Number(d.amount).toFixed(2)}</div>
-    </div>
-  )
-}
-
-export default function SpendingView({ spending }) {
-  if (!spending) {
+const CustomTooltip = ({ active, payload }) => {
+  if (active && payload && payload.length) {
     return (
-      <div className="panel panel-center empty-panel">
-        <p className="empty-title">No spending data</p>
-        <p className="muted">Run the assistant to load transactions.</p>
+      <div className="shadcn-chart-tooltip">
+        <p className="tooltip-label">{payload[0].payload.category}</p>
+        <p className="tooltip-value">${payload[0].value.toFixed(2)}</p>
       </div>
-    )
+    );
   }
+  return null;
+};
 
-  const { total, budget, by_category, transactions } = spending
-  const pct = Math.min(100, (total / budget) * 100)
+export default function SpendingView() {
+  const [data, setData] = useState({ graph_data: [], transactions: [], total: 0 });
+  const [loading, setLoading] = useState(true);
 
-  const barData = Object.entries(by_category ?? {}).map(([cat, amt]) => ({
-    category: cat,
-    amount: amt,
-  }))
+  useEffect(() => {
+    fetch('http://127.0.0.1:8000/api/spending')
+      .then(res => res.json())
+      .then(json => { setData(json); setLoading(false); })
+      .catch(err => console.error("Spending fetch error:", err));
+  }, []);
+
+  if (loading) return <div className="p-8 text-[#ff69b4]">Analyzing finances...</div>;
 
   return (
-    <div className="stack">
-      <section className="panel">
-        <h2 className="section-title">Summary</h2>
-        <div className="stat-row stat-row-3">
-          <div className="stat-block">
-            <div className="stat-block-value">${total.toFixed(2)}</div>
-            <div className="stat-block-label">Total spent</div>
+    <div className="pro-container spending-layout-grid">
+      <section className="dashboard-half">
+        <header className="section-header">
+          <div className="title-group">
+            <Wallet size={20} className="accent-icon" />
+            <h2 className="pro-title">Spending Breakdown</h2>
           </div>
-          <div className="stat-block">
-            <div className="stat-block-value">${budget.toLocaleString()}</div>
-            <div className="stat-block-label">Budget</div>
-          </div>
-          <div className="stat-block">
-            <div className="stat-block-value">{pct.toFixed(1)}%</div>
-            <div className="stat-block-label">Of budget used</div>
-          </div>
+          <div className="total-badge">${data.total.toFixed(2)}</div>
+        </header>
+
+        <div className="content-card shadcn-card h-[350px]">
+          <ResponsiveContainer width="100%" height="100%">
+            <BarChart data={data.graph_data} layout="vertical" margin={{ left: 40, right: 30 }}>
+              <XAxis type="number" hide />
+              <YAxis
+                dataKey="category"
+                type="category"
+                axisLine={false}
+                tickLine={false}
+                tick={{ fill: '#94a3b8', fontSize: 12, fontWeight: 600 }}
+                width={80}
+              />
+              <Tooltip content={<CustomTooltip />} cursor={{ fill: 'rgba(255, 105, 180, 0.05)' }} />
+              <Bar dataKey="amount" radius={[0, 4, 4, 0]} barSize={20}>
+                {data.graph_data.map((_, i) => (
+                  <Cell key={i} fill={i % 2 === 0 ? '#ff69b4' : '#2a303a'} />
+                ))}
+              </Bar>
+            </BarChart>
+          </ResponsiveContainer>
+        </div>
+
+        <div className="content-card mt-6 bg-gradient-to-r from-[#1e2229] to-transparent border-l-2 border-[#ff69b4] p-4">
+          <h4 className="text-[#ff69b4] text-xs font-bold uppercase tracking-widest mb-1 flex items-center gap-2">
+            <ArrowUpRight size={14} /> Finance Insight
+          </h4>
+          <p className="text-sm text-[#94a3b8]">
+            Your largest expense this month is <strong>{data.graph_data[0]?.category || 'N/A'}</strong>.
+          </p>
         </div>
       </section>
 
-      <div className="two-col">
-        <section className="panel">
-          <h2 className="section-title">By category</h2>
-          <div className="chart-wrap">
-            {barData.length === 0 ? (
-              <p className="muted panel-pad">No breakdown yet.</p>
-            ) : (
-              <ResponsiveContainer width="100%" height={260}>
-                <BarChart data={barData} barSize={36}>
-                  <XAxis dataKey="category" tick={{ fontSize: 12 }} />
-                  <YAxis tick={{ fontSize: 12 }} tickFormatter={(v) => `$${v}`} />
-                  <Tooltip content={<ChartTooltip />} cursor={{ fill: 'rgba(59,91,219,0.06)' }} />
-                  <Bar dataKey="amount" radius={[6, 6, 0, 0]}>
-                    {barData.map((d, i) => (
-                      <Cell key={i} fill={CAT_COLORS[d.category] ?? '#64748b'} />
-                    ))}
-                  </Bar>
-                </BarChart>
-              </ResponsiveContainer>
-            )}
+      <section className="dashboard-half">
+        <header className="section-header">
+          <div className="title-group">
+            <CreditCard size={20} className="accent-icon" />
+            <h2 className="pro-title">Transaction History</h2>
           </div>
-        </section>
+        </header>
 
-        <section className="panel">
-          <h2 className="section-title">Breakdown</h2>
-          <div className="panel-pad">
-            {barData.map(({ category, amount }) => {
-              const pctRow = total > 0 ? (amount / total) * 100 : 0
-              const color = CAT_COLORS[category] ?? '#64748b'
-              return (
-                <div key={category} className="progress-block">
-                  <div className="progress-head">
-                    <span>{CAT_LABEL[category] ?? category}</span>
-                    <span className="small">${amount.toFixed(2)}</span>
-                  </div>
-                  <div className="progress-track">
-                    <div
-                      className="progress-fill"
-                      style={{ width: `${pctRow}%`, background: color }}
-                    />
-                  </div>
-                </div>
-              )
-            })}
-          </div>
-        </section>
-      </div>
-
-      <section className="panel">
-        <div className="panel-head">
-          <h2 className="section-title">Recent transactions</h2>
-          <span className="badge">{(transactions ?? []).length}</span>
-        </div>
-        {(transactions ?? []).length === 0 ? (
-          <p className="muted panel-pad">No transactions listed.</p>
-        ) : (
-          <div className="table-wrap">
-            <table className="data-table">
-              <thead>
-                <tr>
-                  <th>Vendor</th>
-                  <th>Category</th>
-                  <th>Date</th>
-                  <th className="cell-right">Amount</th>
+        <div className="content-card table-card custom-scrollbar overflow-y-auto max-h-[500px]">
+          <table className="pro-table">
+            <thead>
+              <tr>
+                <th>Vendor</th>
+                <th>Category</th>
+                <th className="text-right">Amount</th>
+              </tr>
+            </thead>
+            <tbody>
+              {data.transactions.map((t, i) => (
+                <tr key={i} className="table-row-hover">
+                  <td>
+                    <div className="vendor-cell">
+                      <span className="vendor-name">{t.vendor}</span>
+                      <span className="vendor-date">{t.date}</span>
+                    </div>
+                  </td>
+                  <td><span className="cat-tag">{t.category}</span></td>
+                  <td className="text-right font-bold text-[#f1f5f9]">${t.amount.toFixed(2)}</td>
                 </tr>
-              </thead>
-              <tbody>
-                {[...(transactions ?? [])].reverse().map((t, i) => (
-                  <tr key={i}>
-                    <td className="cell-strong">{t.vendor}</td>
-                    <td>
-                      <span
-                        className="tag"
-                        style={{
-                          background: `${CAT_COLORS[t.category] ?? '#64748b'}18`,
-                          color: CAT_COLORS[t.category] ?? '#475569',
-                        }}
-                      >
-                        {CAT_LABEL[t.category] ?? t.category}
-                      </span>
-                    </td>
-                    <td className="muted">{t.date}</td>
-                    <td className="cell-right cell-strong">${t.amount.toFixed(2)}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        )}
+              ))}
+            </tbody>
+          </table>
+        </div>
       </section>
     </div>
-  )
+  );
 }

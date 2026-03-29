@@ -1,0 +1,31 @@
+timestamp,vendor,amount,category,currency,email_id
+2026-03-18T19:00:49.598768,Netflix,15.99,utilities,USD,seed
+2026-03-18T19:00:49.598768,Whole Foods,62.4,food,USD,seed
+2026-03-18T19:00:49.598768,Uber,18.2,transport,USD,seed
+2026-03-18T19:00:49.598768,Amazon,89.95,shopping,USD,seed
+2026-03-18T19:00:49.598768,Delta,320.0,travel,USD,seed
+2026-03-18T19:00:49.598768,Starbucks,24.3,food,USD,seed
+2026-03-18T19:00:49.598768,Shell,48.24,transport,USD,seed
+2026-03-18T19:00:49.598768,Uber,24.5,transport,USD,seed
+2026-03-18T19:00:49.598768,Amazon,156.82,shopping,USD,seed
+2026-03-18T19:00:49.598768,NYC Transit,33.0,transport,USD,seed
+2026-03-28T19:00:49.603159,Uber,24.5,transport,USD,email_001
+2026-03-28T19:01:33.618283,Uber,24.5,transport,USD,email_001
+2026-03-28T19:01:34.339399,Uber,24.5,transport,USD,email_001
+2026-03-28T19:01:34.836315,Uber,24.5,transport,USD,email_001
+2026-03-28T19:01:34.989636,Uber,24.5,transport,USD,email_001
+2026-03-28T19:01:35.136067,Uber,24.5,transport,USD,email_001
+2026-03-28T19:04:26.154692,Uber,24.5,transport,USD,email_001
+2026-03-28T19:17:02.324833,Uber,24.5,transport,USD,email_001
+2026-03-28T19:17:04.168227,Uber,24.5,transport,USD,email_001
+2026-03-28T19:17:06.615339,Uber,24.5,transport,USD,email_001
+2026-03-29T00:45:55.413091,Uber,24.5,transport,USD,email_001
+2026-03-29T00:47:19.088104,Uber,24.5,transport,USD,email_001
+2026-03-29T00:50:27.388566,Uber,24.5,transport,USD,email_001
+2026-03-29T01:31:35.968032,Uber,24.5,transport,USD,email_001
+2026-03-29T01:31:37.188319,Uber,24.5,transport,USD,email_001
+2026-03-29T02:36:49.738382,Uber,24.5,transport,USD,email_001
+2026-03-29T02:37:02.912598,Uber,24.5,transport,USD,email_001
+2026-03-29T02:39:50.976006,Uber,24.5,transport,USD,email_001
+2026-03-29T02:39:51.676952,Uber,24.5,transport,USD,email_001
+2026-03-29T03:26:49.683480,Uber,24.5,transport,USD,email_001

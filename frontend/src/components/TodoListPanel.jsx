@@ -1,57 +1,59 @@
-import { useState, useId } from 'react'
-import { Plus } from 'lucide-react'
+import { useState } from 'react'
+import { Plus, X } from 'lucide-react'
 
-export default function TodoListPanel({ todoState, variant = 'default' }) {
+export default function TodoListPanel({ todoState }) {
   const { todos, add, toggle, remove } = todoState
   const [draft, setDraft] = useState('')
-  const formId = useId()
 
   const submit = (e) => {
     e.preventDefault()
+    if (!draft.trim()) return
     add(draft)
     setDraft('')
   }
 
-  const listClass = variant === 'full' ? 'todo-list todo-list-full' : 'todo-list'
-
   return (
-    <div className={`todo-panel ${variant === 'full' ? 'todo-panel-full' : ''}`}>
-      <ul className={listClass}>
+    <div className="todo-container-pro">
+      {/* 1. Sleek Input Group at the Top */}
+      <form className="todo-input-group" onSubmit={submit}>
+        <input
+          className="todo-input"
+          value={draft}
+          onChange={(e) => setDraft(e.target.value)}
+          placeholder="Add a new task..."
+          autoComplete="off"
+        />
+        <button type="submit" className="btn-add-task">
+          <Plus size={20} />
+        </button>
+      </form>
+
+      {/* 2. The Task List */}
+      <ul className="todo-list">
         {todos.map((t) => (
-          <li key={t.id} className={`todo-item ${t.done ? 'todo-done' : ''}`}>
-            <label className="todo-label">
-              <input
-                type="checkbox"
-                checked={t.done}
-                onChange={() => toggle(t.id)}
-                className="todo-check"
-              />
-              <span className="todo-text">{t.text}</span>
-            </label>
+          <li key={t.id} className="todo-item">
+            {/* Un-nesting the input and span allows the CSS 'gap' to work */}
+            <input
+              type="checkbox"
+              checked={t.done}
+              onChange={() => toggle(t.id)}
+              className="todo-check-pro"
+            />
+
+            <span className={`todo-text ${t.done ? 'todo-text-done' : ''}`}>
+              {t.text}
+            </span>
+
             <button
               type="button"
-              className="todo-remove"
+              className="btn-delete"
               onClick={() => remove(t.id)}
-              aria-label={`Remove: ${t.text}`}
             >
-              ×
+              <X size={16} />
             </button>
           </li>
         ))}
       </ul>
-      <form className="todo-form" onSubmit={submit}>
-        <input
-          id={formId}
-          className="todo-input"
-          value={draft}
-          onChange={(e) => setDraft(e.target.value)}
-          placeholder="Add a task…"
-          autoComplete="off"
-        />
-        <button type="submit" className="btn btn-small btn-primary todo-add" aria-label="Add task">
-          <Plus size={18} aria-hidden />
-        </button>
-      </form>
     </div>
   )
 }

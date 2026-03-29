@@ -1,50 +1,42 @@
-import { useState, useEffect } from 'react'
-
-const STORAGE_KEY = 'momma-todos'
-
-function defaultTodos() {
-  try {
-    const s = localStorage.getItem(STORAGE_KEY)
-    if (s) {
-      const parsed = JSON.parse(s)
-      if (Array.isArray(parsed) && parsed.length) return parsed
-    }
-  } catch {
-    /* fall through */
-  }
-  return [
-    { id: '1', text: 'Review Q2 planning notes', done: false },
-    { id: '2', text: 'Reply to calendar invites', done: false },
-    { id: '3', text: 'Pack for client trip', done: false },
-  ]
-}
+import { useState } from 'react';
 
 export function useTodos() {
-  const [todos, setTodos] = useState(() => defaultTodos())
+    const [todos, setTodos] = useState([]);
 
-  useEffect(() => {
-    try {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(todos))
-    } catch {
-      /* ignore */
-    }
-  }, [todos])
+    // SENIOR FIX: Capture time and location from the backend response
+    const set = (backendTasks) => {
+        const formatted = backendTasks.map((t, index) => ({
+            id: t.id || index,
+            text: t.text,
+            time: t.time,        // Added this
+            location: t.location, // Added this
+            done: t.done || false
+        }));
+        setTodos(formatted);
+    };
 
-  const add = (text) => {
-    const t = text.trim()
-    if (!t) return
-    setTodos((prev) => [...prev, { id: crypto.randomUUID(), text: t, done: false }])
-  }
+    // SENIOR FIX: Allow adding tasks with structured metadata
+    const add = (text, time = null, location = null) => {
+        if (!text.trim()) return;
+        setTodos((prev) => [
+            ...prev,
+            {
+                id: Date.now(),
+                text,
+                time,
+                location,
+                done: false
+            }
+        ]);
+    };
 
-  const toggle = (id) => {
-    setTodos((prev) =>
-      prev.map((x) => (x.id === id ? { ...x, done: !x.done } : x))
-    )
-  }
+    const toggle = (id) => {
+        setTodos((prev) => prev.map((t) => (t.id === id ? { ...t, done: !t.done } : t)));
+    };
 
-  const remove = (id) => {
-    setTodos((prev) => prev.filter((x) => x.id !== id))
-  }
+    const remove = (id) => {
+        setTodos((prev) => prev.filter((t) => t.id !== id));
+    };
 
-  return { todos, add, toggle, remove }
+    return { todos, add, toggle, remove, set };
 }
