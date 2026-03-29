@@ -929,6 +929,45 @@ body {
   gap: 6px;
 }
 
+.todo-list-full {
+  max-height: min(52vh, 420px);
+}
+
+.todo-panel-full {
+  padding: 0 4px 4px;
+}
+
+.todo-offline-hint {
+  padding: 0 20px 10px;
+  font-size: 0.875rem;
+}
+
+.todo-offline-body {
+  padding: 0 20px 20px;
+}
+
+/* ——— Tasks tab ——— */
+.tasks-view {
+  max-width: 640px;
+}
+
+.tasks-panel-head {
+  padding-bottom: 0;
+}
+
+.tasks-page-title {
+  padding-bottom: 4px;
+}
+
+.tasks-page-sub {
+  padding: 0 20px 16px;
+  font-size: 0.875rem;
+}
+
+.tasks-panel-body {
+  padding: 0 20px 20px;
+}
+
 .todo-item {
   display: flex;
   align-items: center;

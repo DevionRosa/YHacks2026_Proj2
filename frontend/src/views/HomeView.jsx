@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo, useId } from 'react'
+import { useMemo } from 'react'
 import ReactMarkdown from 'react-markdown'
 import {
   LineChart,
@@ -8,10 +8,10 @@ import {
   Tooltip,
   ResponsiveContainer,
 } from 'recharts'
-import { Plus, Bot } from 'lucide-react'
+import { Bot } from 'lucide-react'
+import TodoListPanel from '../components/TodoListPanel'
 
-export default function HomeView({ data, logs, running, onRunPipeline }) {
-  const todoState = useTodos()
+export default function HomeView({ data, logs, running, onRunPipeline, todoState }) {
 
   const carbon = data?.carbon
   const weekChart = useMemo(
@@ -34,11 +34,24 @@ export default function HomeView({ data, logs, running, onRunPipeline }) {
 
   if (!data) {
     return (
-      <div className="panel panel-center empty-panel">
-        <p className="empty-title">Overview unavailable</p>
-        <p className="muted">
-          Start the backend, then tap <strong>Refresh</strong> or <strong>Run assistant</strong>.
-        </p>
+      <div className="stack">
+        <div className="panel panel-center empty-panel">
+          <p className="empty-title">Overview unavailable</p>
+          <p className="muted">
+            Start the backend, then tap <strong>Refresh</strong> or <strong>Run assistant</strong>.
+          </p>
+        </div>
+        <section className="panel todo-offline-section" aria-labelledby="todo-offline-heading">
+          <h2 id="todo-offline-heading" className="section-title">
+            To-do list
+          </h2>
+          <p className="muted todo-offline-hint">
+            Your tasks are saved on this device. Open the <strong>Tasks</strong> tab anytime.
+          </p>
+          <div className="todo-offline-body">
+            <TodoListPanel todoState={todoState} variant="full" />
+          </div>
+        </section>
       </div>
     )
   }
@@ -81,7 +94,7 @@ export default function HomeView({ data, logs, running, onRunPipeline }) {
           </div>
           <div className="wire-tier wire-tier-grow">
             <h3 className="wire-subtitle">Today&apos;s to-do list</h3>
-            <TodoPanel todoState={todoState} />
+            <TodoListPanel todoState={todoState} />
           </div>
         </WireCard>
 
@@ -217,106 +230,6 @@ function WireCard({ title, children }) {
     <div className="wire-card-wrap">
       <h2 className="wire-card-heading">{title}</h2>
       <div className="wire-card">{children}</div>
-    </div>
-  )
-}
-
-function useTodos() {
-  const [todos, setTodos] = useState(() => defaultTodos())
-
-  useEffect(() => {
-    try {
-      localStorage.setItem('momma-todos', JSON.stringify(todos))
-    } catch {
-      /* ignore */
-    }
-  }, [todos])
-
-  const add = (text) => {
-    const t = text.trim()
-    if (!t) return
-    setTodos((prev) => [...prev, { id: crypto.randomUUID(), text: t, done: false }])
-  }
-
-  const toggle = (id) => {
-    setTodos((prev) =>
-      prev.map((x) => (x.id === id ? { ...x, done: !x.done } : x))
-    )
-  }
-
-  const remove = (id) => {
-    setTodos((prev) => prev.filter((x) => x.id !== id))
-  }
-
-  return { todos, add, toggle, remove }
-}
-
-function defaultTodos() {
-  try {
-    const s = localStorage.getItem('momma-todos')
-    if (s) {
-      const parsed = JSON.parse(s)
-      if (Array.isArray(parsed) && parsed.length) return parsed
-    }
-  } catch {
-    /* fall through */
-  }
-  return [
-    { id: '1', text: 'Review Q2 planning notes', done: false },
-    { id: '2', text: 'Reply to calendar invites', done: false },
-    { id: '3', text: 'Pack for client trip', done: false },
-  ]
-}
-
-function TodoPanel({ todoState }) {
-  const { todos, add, toggle, remove } = todoState
-  const [draft, setDraft] = useState('')
-  const formId = useId()
-
-  const submit = (e) => {
-    e.preventDefault()
-    add(draft)
-    setDraft('')
-  }
-
-  return (
-    <div className="todo-panel">
-      <ul className="todo-list">
-        {todos.map((t) => (
-          <li key={t.id} className={`todo-item ${t.done ? 'todo-done' : ''}`}>
-            <label className="todo-label">
-              <input
-                type="checkbox"
-                checked={t.done}
-                onChange={() => toggle(t.id)}
-                className="todo-check"
-              />
-              <span className="todo-text">{t.text}</span>
-            </label>
-            <button
-              type="button"
-              className="todo-remove"
-              onClick={() => remove(t.id)}
-              aria-label={`Remove: ${t.text}`}
-            >
-              ×
-            </button>
-          </li>
-        ))}
-      </ul>
-      <form className="todo-form" onSubmit={submit}>
-        <input
-          id={formId}
-          className="todo-input"
-          value={draft}
-          onChange={(e) => setDraft(e.target.value)}
-          placeholder="Add a task…"
-          autoComplete="off"
-        />
-        <button type="submit" className="btn btn-small btn-primary todo-add" aria-label="Add task">
-          <Plus size={18} aria-hidden />
-        </button>
-      </form>
     </div>
   )
 }

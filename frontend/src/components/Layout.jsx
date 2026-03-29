@@ -1,6 +1,7 @@
 import {
   LayoutDashboard,
   Calendar,
+  ListChecks,
   Wallet,
   Leaf,
   Play,
@@ -11,6 +12,7 @@ import {
 
 const TABS = [
   { id: 'home', label: 'Overview', icon: LayoutDashboard },
+  { id: 'tasks', label: 'Tasks', icon: ListChecks },
   { id: 'calendar', label: 'Calendar', icon: Calendar },
   { id: 'spending', label: 'Spending', icon: Wallet },
   { id: 'carbon', label: 'Carbon', icon: Leaf },
