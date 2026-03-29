@@ -18,3 +18,15 @@ timestamp,mode,distance_km,gallons,co2_kg,description,email_id
 2026-03-28T19:01:35.139049,gas,,12.4,113.64,Shell Fuel Receipt — March 28,email_004
 2026-03-28T19:04:26.155818,flight,3983,,1015.66,Your flight confirmation — DL 1847 JFK → LAX,email_003
 2026-03-28T19:04:26.156695,gas,,12.4,113.64,Shell Fuel Receipt — March 28,email_004
+2026-03-28T19:17:02.325148,flight,3983,,1015.66,Your flight confirmation — DL 1847 JFK → LAX,email_003
+2026-03-28T19:17:02.325293,gas,,12.4,113.64,Shell Fuel Receipt — March 28,email_004
+2026-03-28T19:17:04.168520,flight,3983,,1015.66,Your flight confirmation — DL 1847 JFK → LAX,email_003
+2026-03-28T19:17:04.168723,gas,,12.4,113.64,Shell Fuel Receipt — March 28,email_004
+2026-03-28T19:17:06.615597,flight,3983,,1015.66,Your flight confirmation — DL 1847 JFK → LAX,email_003
+2026-03-28T19:17:06.615718,gas,,12.4,113.64,Shell Fuel Receipt — March 28,email_004
+2026-03-29T00:45:55.413833,flight,3983,,1015.66,Your flight confirmation — DL 1847 JFK → LAX,email_003
+2026-03-29T00:45:55.414274,gas,,12.4,113.64,Shell Fuel Receipt — March 28,email_004
+2026-03-29T00:47:19.088566,flight,3983,,1015.66,Your flight confirmation — DL 1847 JFK → LAX,email_003
+2026-03-29T00:47:19.088720,gas,,12.4,113.64,Shell Fuel Receipt — March 28,email_004
+2026-03-29T00:50:27.389407,flight,3983,,1015.66,Your flight confirmation — DL 1847 JFK → LAX,email_003
+2026-03-29T00:50:27.389761,gas,,12.4,113.64,Shell Fuel Receipt — March 28,email_004
