@@ -90,3 +90,43 @@ timestamp,mode,distance_km,gallons,co2_kg,description,email_id
 2026-03-29T02:57:48.375240,gas,,12.4,113.64,Shell Fuel Receipt — March 28,email_004
 2026-03-29T02:57:48.947377,flight,3983,,1015.66,Your flight confirmation — DL 1847 JFK → LAX,email_003
 2026-03-29T02:57:48.947515,gas,,12.4,113.64,Shell Fuel Receipt — March 28,email_004
+2026-03-29T03:13:48.648964,flight,3983,,1015.66,Your flight confirmation — DL 1847 JFK → LAX,email_003
+2026-03-29T03:13:48.649325,gas,,12.4,113.64,Shell Fuel Receipt — March 28,email_004
+2026-03-29T03:13:50.160900,flight,3983,,1015.66,Your flight confirmation — DL 1847 JFK → LAX,email_003
+2026-03-29T03:13:50.161121,gas,,12.4,113.64,Shell Fuel Receipt — March 28,email_004
+2026-03-29T03:13:50.843190,flight,3983,,1015.66,Your flight confirmation — DL 1847 JFK → LAX,email_003
+2026-03-29T03:13:50.843499,gas,,12.4,113.64,Shell Fuel Receipt — March 28,email_004
+2026-03-29T03:13:54.449063,flight,3983,,1015.66,Your flight confirmation — DL 1847 JFK → LAX,email_003
+2026-03-29T03:13:54.449195,gas,,12.4,113.64,Shell Fuel Receipt — March 28,email_004
+2026-03-29T03:13:54.939022,flight,3983,,1015.66,Your flight confirmation — DL 1847 JFK → LAX,email_003
+2026-03-29T03:13:54.939235,gas,,12.4,113.64,Shell Fuel Receipt — March 28,email_004
+2026-03-29T03:13:55.196211,flight,3983,,1015.66,Your flight confirmation — DL 1847 JFK → LAX,email_003
+2026-03-29T03:13:55.196354,gas,,12.4,113.64,Shell Fuel Receipt — March 28,email_004
+2026-03-29T03:13:55.379665,flight,3983,,1015.66,Your flight confirmation — DL 1847 JFK → LAX,email_003
+2026-03-29T03:13:55.379868,gas,,12.4,113.64,Shell Fuel Receipt — March 28,email_004
+2026-03-29T03:13:55.566918,flight,3983,,1015.66,Your flight confirmation — DL 1847 JFK → LAX,email_003
+2026-03-29T03:13:55.567288,gas,,12.4,113.64,Shell Fuel Receipt — March 28,email_004
+2026-03-29T03:13:55.750745,flight,3983,,1015.66,Your flight confirmation — DL 1847 JFK → LAX,email_003
+2026-03-29T03:13:55.751164,gas,,12.4,113.64,Shell Fuel Receipt — March 28,email_004
+2026-03-29T03:13:55.931429,flight,3983,,1015.66,Your flight confirmation — DL 1847 JFK → LAX,email_003
+2026-03-29T03:13:55.931598,gas,,12.4,113.64,Shell Fuel Receipt — March 28,email_004
+2026-03-29T03:13:56.089725,flight,3983,,1015.66,Your flight confirmation — DL 1847 JFK → LAX,email_003
+2026-03-29T03:13:56.090429,gas,,12.4,113.64,Shell Fuel Receipt — March 28,email_004
+2026-03-29T03:13:56.250211,flight,3983,,1015.66,Your flight confirmation — DL 1847 JFK → LAX,email_003
+2026-03-29T03:13:56.250575,gas,,12.4,113.64,Shell Fuel Receipt — March 28,email_004
+2026-03-29T03:13:56.420794,flight,3983,,1015.66,Your flight confirmation — DL 1847 JFK → LAX,email_003
+2026-03-29T03:13:56.421091,gas,,12.4,113.64,Shell Fuel Receipt — March 28,email_004
+2026-03-29T03:13:56.588755,flight,3983,,1015.66,Your flight confirmation — DL 1847 JFK → LAX,email_003
+2026-03-29T03:13:56.588888,gas,,12.4,113.64,Shell Fuel Receipt — March 28,email_004
+2026-03-29T03:13:56.787997,flight,3983,,1015.66,Your flight confirmation — DL 1847 JFK → LAX,email_003
+2026-03-29T03:13:56.788132,gas,,12.4,113.64,Shell Fuel Receipt — March 28,email_004
+2026-03-29T03:13:56.954236,flight,3983,,1015.66,Your flight confirmation — DL 1847 JFK → LAX,email_003
+2026-03-29T03:13:56.954383,gas,,12.4,113.64,Shell Fuel Receipt — March 28,email_004
+2026-03-29T03:13:57.150406,flight,3983,,1015.66,Your flight confirmation — DL 1847 JFK → LAX,email_003
+2026-03-29T03:13:57.150673,gas,,12.4,113.64,Shell Fuel Receipt — March 28,email_004
+2026-03-29T03:13:57.354027,flight,3983,,1015.66,Your flight confirmation — DL 1847 JFK → LAX,email_003
+2026-03-29T03:13:57.354174,gas,,12.4,113.64,Shell Fuel Receipt — March 28,email_004
+2026-03-29T03:13:57.570914,flight,3983,,1015.66,Your flight confirmation — DL 1847 JFK → LAX,email_003
+2026-03-29T03:13:57.571136,gas,,12.4,113.64,Shell Fuel Receipt — March 28,email_004
+2026-03-29T03:13:57.787662,flight,3983,,1015.66,Your flight confirmation — DL 1847 JFK → LAX,email_003
+2026-03-29T03:13:57.787923,gas,,12.4,113.64,Shell Fuel Receipt — March 28,email_004
